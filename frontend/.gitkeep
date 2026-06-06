@@ -1,0 +1,17 @@
+# Smart Review Analyzer
+
+An AI-powered website that analyzes customer reviews, identifies sentiment and key themes, and generates professional responses for hospitality businesses.
+
+## Tech Stack
+
+- Frontend: React.js
+- Styling: Bootstrap 5
+- Backend: Express.js (Node.js)
+- Database: MongoDB
+- Authentication: JWT Authentication
+- AI Integration: Gemini API
+- Deployment: Vercel (Frontend) + Render (Backend)
+
+## Setup
+
+Setup — coming soon.
