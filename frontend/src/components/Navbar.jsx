@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Navbar() {
+function Navbar({ darkMode, setDarkMode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -11,7 +11,7 @@ function Navbar() {
     }`;
 
   return (
-    <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-slate-900 dark:bg-black text-white shadow-lg sticky top-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
 
         {/* Logo */}
@@ -34,13 +34,26 @@ function Navbar() {
             Dashboard
           </Link>
 
-          {/* LOGIN - NORMAL (NO SPECIAL STYLING) */}
           <Link
             to="/login"
             className="hover:text-blue-400 transition"
           >
-            Login
+            Logout
           </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="
+            text-xl
+            hover:scale-110
+            transition-transform
+            duration-200
+            "
+            title="Toggle Theme"
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </button>
 
           <span className="text-2xl cursor-pointer">👤</span>
         </div>
@@ -56,21 +69,32 @@ function Navbar() {
 
       {/* MOBILE MENU */}
       {open && (
-        <div className="md:hidden bg-slate-800 px-6 pb-4 flex flex-col gap-4">
+        <div className="md:hidden bg-slate-800 dark:bg-slate-950 px-6 pb-4 flex flex-col gap-4">
 
-          <Link to="/" onClick={() => setOpen(false)} className={linkClass("/")}>
+          <Link
+            to="/"
+            onClick={() => setOpen(false)}
+            className={linkClass("/")}
+          >
             Home
           </Link>
 
-          <Link to="/about" onClick={() => setOpen(false)} className={linkClass("/about")}>
+          <Link
+            to="/about"
+            onClick={() => setOpen(false)}
+            className={linkClass("/about")}
+          >
             About
           </Link>
 
-          <Link to="/dashboard" onClick={() => setOpen(false)} className={linkClass("/dashboard")}>
+          <Link
+            to="/dashboard"
+            onClick={() => setOpen(false)}
+            className={linkClass("/dashboard")}
+          >
             Dashboard
           </Link>
 
-          {/* LOGIN - NORMAL */}
           <Link
             to="/login"
             onClick={() => setOpen(false)}
@@ -78,6 +102,14 @@ function Navbar() {
           >
             Login
           </Link>
+
+          {/* Mobile Theme Toggle */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="text-left hover:text-blue-400"
+          >
+            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+          </button>
 
           <div className="text-2xl">👤 Profile</div>
         </div>

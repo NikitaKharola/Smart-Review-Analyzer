@@ -1,6 +1,6 @@
 function Footer() {
   return (
-    <footer className="bg-slate-900 text-white py-8 mt-auto">
+    <footer className="bg-slate-900 dark:bg-black text-white py-8 mt-auto transition-colors duration-300">
 
       <div className="max-w-6xl mx-auto px-6 text-center">
 
@@ -9,10 +9,10 @@ function Footer() {
         </h3>
 
         <div className="flex justify-center gap-6 mb-4">
-          <a href="#">Home</a>
-          <a href="#">About</a>
-          <a href="#">Dashboard</a>
-          <a href="#">Login</a>
+          <a href="#" className="hover:text-blue-400">Home</a>
+          <a href="#" className="hover:text-blue-400">About</a>
+          <a href="#" className="hover:text-blue-400">Dashboard</a>
+          <a href="#" className="hover:text-blue-400">Login</a>
         </div>
 
         <div className="flex justify-center gap-4 mb-4 text-2xl">
@@ -21,7 +21,7 @@ function Footer() {
           <span>🐦</span>
         </div>
 
-        <p>
+        <p className="text-slate-300">
           © 2026 AI Review Analyzer
         </p>
 

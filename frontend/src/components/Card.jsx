@@ -9,6 +9,7 @@ function Card({
       className="
       group
       bg-white
+      dark:bg-slate-800
       rounded-3xl
       overflow-hidden
       shadow-lg
@@ -19,6 +20,7 @@ function Card({
       duration-300
       border
       border-gray-100
+      dark:border-slate-700
       "
     >
       <div className="overflow-hidden">
@@ -39,7 +41,7 @@ function Card({
       <div className="p-6">
 
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xl font-bold text-slate-800">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white">
             {title}
           </h2>
 
@@ -48,7 +50,7 @@ function Card({
           </span>
         </div>
 
-        <p className="text-gray-600 mb-6 leading-relaxed">
+        <p className="text-gray-600 dark:text-slate-300 mb-6 leading-relaxed">
           {description}
         </p>
 

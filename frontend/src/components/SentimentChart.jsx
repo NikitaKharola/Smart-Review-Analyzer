@@ -16,8 +16,21 @@ const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
 
 function SentimentChart() {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">
+    <div
+      className="
+      bg-white
+      dark:bg-slate-800
+      p-6
+      rounded-2xl
+      shadow-lg
+      border
+      border-slate-100
+      dark:border-slate-700
+      transition-colors
+      duration-300
+      "
+    >
+      <h2 className="text-2xl font-bold mb-4 text-slate-800 dark:text-white">
         Guest Sentiment Overview
       </h2>
 

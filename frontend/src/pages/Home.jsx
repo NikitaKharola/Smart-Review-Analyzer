@@ -3,10 +3,10 @@ import Card from "../components/Card";
 import SentimentChart from "../components/SentimentChart";
 import ThemeChart from "../components/ThemeChart";
 import VoiceAssistant from "../components/VoiceAssistant";
-
+import { Button } from "../components/ui";
 function Home() {
   return (
-    <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50">
+    <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300">
 
       <Hero />
 
@@ -147,47 +147,84 @@ function Home() {
       </section>
 
       {/* Review Preview */}
-      <section className="bg-slate-50 py-24">
+<section className="bg-slate-50 dark:bg-slate-900 py-24 transition-colors duration-300">
 
-        <div className="max-w-5xl mx-auto px-6">
+  <div className="max-w-5xl mx-auto px-6">
 
-          <h2 className="text-4xl font-bold text-center mb-10">
-            Try Review Analyzer
-          </h2>
+    <h2 className="text-4xl font-bold text-center mb-10 text-slate-900 dark:text-white">
+      Try Review Analyzer
+    </h2>
 
-          <div className="bg-white/70 backdrop-blur-xl border border-gray-100 rounded-2xl p-8 shadow-xl">
+    <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-gray-100 dark:border-slate-700 rounded-2xl p-8 shadow-xl">
 
-            <textarea
-              className="w-full border border-gray-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="5"
-              placeholder="Paste guest reviews here..."
-            />
+      <textarea
+        className="
+        w-full
+        border
+        border-gray-200
+        dark:border-slate-600
+        bg-white
+        dark:bg-slate-900
+        text-slate-900
+        dark:text-white
+        rounded-xl
+        p-4
+        focus:outline-none
+        focus:ring-2
+        focus:ring-blue-500
+        "
+        rows="5"
+        placeholder="Paste guest reviews here..."
+      />
 
-            <button className="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-md transition">
-              Analyze Reviews
-            </button>
+    <Button
+  text="Analyze Reviews"
+  className="
+    mt-5
+    bg-blue-600
+    hover:bg-blue-700
+    px-6
+    py-3
+    rounded-xl
+    shadow-md
+    transition
+  "
+  onClick={() => console.log("Analyze Reviews")}
+/>
 
-            <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-gray-100">
+      <div
+        className="
+        mt-8
+        bg-slate-50
+        dark:bg-slate-900
+        rounded-xl
+        p-6
+        border
+        border-gray-100
+        dark:border-slate-700
+        "
+      >
 
-              <h3 className="font-bold text-xl mb-4">
-                Example Result
-              </h3>
+        <h3 className="font-bold text-xl mb-4 text-slate-900 dark:text-white">
+          Example Result
+        </h3>
 
-              <div className="space-y-2 text-gray-700">
+        <div className="space-y-2 text-gray-700 dark:text-gray-300">
 
-                <p><strong>Sentiment:</strong> Positive</p>
-                <p><strong>Theme:</strong> Cleanliness</p>
-                <p><strong>Confidence:</strong> 92%</p>
-                <p><strong>Response:</strong> Thank you for your valuable feedback.</p>
-
-              </div>
-
-            </div>
-
-          </div>
+          <p><strong>Sentiment:</strong> Positive</p>
+          <p><strong>Theme:</strong> Cleanliness</p>
+          <p><strong>Confidence:</strong> 92%</p>
+          <p><strong>Response:</strong> Thank you for your valuable feedback.</p>
 
         </div>
-      </section>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* Testimonials */}
       <section className="max-w-7xl mx-auto py-24 px-6">

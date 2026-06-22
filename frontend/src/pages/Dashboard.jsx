@@ -3,17 +3,17 @@ import ThemeChart from "../components/ThemeChart";
 
 function Dashboard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
 
       <div className="max-w-7xl mx-auto py-16 px-6">
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-5xl font-bold mb-3 text-slate-900">
+          <h1 className="text-5xl font-bold mb-3 text-slate-900 dark:text-white">
             Analytics Dashboard
           </h1>
 
-          <p className="text-slate-600 text-lg">
+          <p className="text-slate-600 dark:text-slate-300 text-lg">
             Future analytics and review insights will appear here.
           </p>
         </div>
@@ -21,28 +21,28 @@ function Dashboard() {
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-10">
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
             <div className="text-3xl mb-2">📊</div>
-            <h2 className="text-3xl font-bold text-slate-900">60</h2>
-            <p className="text-slate-600">Total Reviews</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">60</h2>
+            <p className="text-slate-600 dark:text-slate-300">Total Reviews</p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
             <div className="text-3xl mb-2">🟢</div>
             <h2 className="text-3xl font-bold text-green-600">42</h2>
-            <p className="text-slate-600">Positive</p>
+            <p className="text-slate-600 dark:text-slate-300">Positive</p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
             <div className="text-3xl mb-2">🟡</div>
             <h2 className="text-3xl font-bold text-yellow-500">10</h2>
-            <p className="text-slate-600">Neutral</p>
+            <p className="text-slate-600 dark:text-slate-300">Neutral</p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition">
             <div className="text-3xl mb-2">🔴</div>
             <h2 className="text-3xl font-bold text-red-500">8</h2>
-            <p className="text-slate-600">Negative</p>
+            <p className="text-slate-600 dark:text-slate-300">Negative</p>
           </div>
 
         </div>
@@ -63,11 +63,11 @@ function Dashboard() {
         {/* Charts */}
         <div className="grid md:grid-cols-2 gap-8 mb-10">
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm p-6">
             <SentimentChart />
           </div>
 
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm p-6">
             <ThemeChart />
           </div>
 
@@ -76,14 +76,13 @@ function Dashboard() {
         {/* Bottom Section */}
         <div className="grid md:grid-cols-2 gap-8">
 
-          {/* Top Themes */}
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm p-6">
 
-            <h2 className="text-2xl font-bold mb-4 text-slate-900">
+            <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">
               Top Themes
             </h2>
 
-            <ul className="space-y-3 text-lg text-slate-700">
+            <ul className="space-y-3 text-lg text-slate-700 dark:text-slate-300">
               <li>🏨 Cleanliness</li>
               <li>🍽 Food</li>
               <li>😊 Host Behaviour</li>
@@ -94,24 +93,23 @@ function Dashboard() {
 
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white/50 backdrop-blur-lg border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-lg border border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm p-6">
 
-            <h2 className="text-2xl font-bold mb-4 text-slate-900">
+            <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">
               Recent Activity
             </h2>
 
-            <ul className="space-y-4 text-slate-700">
+            <ul className="space-y-4 text-slate-700 dark:text-slate-300">
 
-              <li className="border-b pb-2">
+              <li className="border-b dark:border-slate-700 pb-2">
                 🔵 Review #001 → Positive → Cleanliness
               </li>
 
-              <li className="border-b pb-2">
+              <li className="border-b dark:border-slate-700 pb-2">
                 🟠 Review #002 → Neutral → Food
               </li>
 
-              <li className="border-b pb-2">
+              <li className="border-b dark:border-slate-700 pb-2">
                 🔴 Review #003 → Negative → Accessibility
               </li>
 

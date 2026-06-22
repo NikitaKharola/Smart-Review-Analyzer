@@ -18,8 +18,21 @@ const data = [
 
 function ThemeChart() {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">
+    <div
+      className="
+      bg-white
+      dark:bg-slate-800
+      p-6
+      rounded-2xl
+      shadow-lg
+      border
+      border-slate-100
+      dark:border-slate-700
+      transition-colors
+      duration-300
+      "
+    >
+      <h2 className="text-2xl font-bold mb-4 text-slate-800 dark:text-white">
         Theme Distribution
       </h2>
 
@@ -28,7 +41,7 @@ function ThemeChart() {
           <XAxis dataKey="theme" />
           <YAxis />
           <Tooltip />
-          <Bar dataKey="count" />
+          <Bar dataKey="count" fill="#2563eb" />
         </BarChart>
       </ResponsiveContainer>
     </div>

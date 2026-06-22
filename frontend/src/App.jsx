@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -7,14 +8,31 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import ComponentDemo from "./pages/ComponentDemo";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
+
   return (
     <BrowserRouter>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
-      <div className="min-h-screen flex flex-col bg-slate-50">
-
-        <Navbar />
+        <Navbar
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+        />
 
         <main className="flex-grow">
           <Routes>
@@ -22,12 +40,12 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/components" element={<ComponentDemo />} />
           </Routes>
         </main>
 
         <Footer />
 
-        {/* Floating AI Assistant */}
         <button
           className="
           fixed
@@ -53,7 +71,6 @@ function App() {
         </button>
 
       </div>
-
     </BrowserRouter>
   );
 }
