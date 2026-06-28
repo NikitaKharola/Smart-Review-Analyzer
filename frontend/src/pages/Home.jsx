@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Hero from "../components/Hero";
 import Card from "../components/Card";
 import SentimentChart from "../components/SentimentChart";
@@ -5,6 +6,14 @@ import ThemeChart from "../components/ThemeChart";
 import VoiceAssistant from "../components/VoiceAssistant";
 import { Button } from "../components/ui";
 function Home() {
+  const [reviews, setReviews] = useState([]);
+
+useEffect(() => {
+  fetch("http://localhost:5000/api/reviews")
+    .then((res) => res.json())
+    .then((data) => setReviews(data))
+    .catch((err) => console.error(err));
+}, []);
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300">
 
@@ -225,7 +234,33 @@ function Home() {
   </div>
 
 </section>
+{/* Backend Reviews */}
+<section className="max-w-7xl mx-auto px-6 py-20">
 
+  <h2 className="text-4xl font-bold text-center mb-10">
+    Reviews from Backend
+  </h2>
+
+  <div className="grid md:grid-cols-2 gap-6">
+
+    {reviews.map((review) => (
+      <div
+        key={review.id}
+        className="bg-white rounded-xl shadow-md p-6 border"
+      >
+        <h3 className="text-xl font-bold">{review.username}</h3>
+
+        <p className="mt-3">{review.review}</p>
+
+        <p className="mt-3 text-yellow-600">
+          ⭐ Rating: {review.rating}/5
+        </p>
+      </div>
+    ))}
+
+  </div>
+
+</section>
       {/* Testimonials */}
       <section className="max-w-7xl mx-auto py-24 px-6">
 
