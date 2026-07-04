@@ -6,15 +6,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { name: "Positive", value: 70 },
-  { name: "Neutral", value: 20 },
-  { name: "Negative", value: 10 },
-];
+const COLORS = { Positive: "#22c55e", Neutral: "#f59e0b", Negative: "#ef4444" };
 
-const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
+function SentimentChart({ data }) {
+  // Falls back to a small demo shape only if no data was passed in,
+  // so the component never crashes while stats are still loading.
+  const chartData = data || [
+    { name: "Positive", value: 0 },
+    { name: "Neutral", value: 0 },
+    { name: "Negative", value: 0 },
+  ];
 
-function SentimentChart() {
   return (
     <div
       className="
@@ -37,17 +39,17 @@ function SentimentChart() {
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             outerRadius={100}
             dataKey="value"
             label
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell
                 key={index}
-                fill={COLORS[index]}
+                fill={COLORS[entry.name] || "#94a3b8"}
               />
             ))}
           </Pie>

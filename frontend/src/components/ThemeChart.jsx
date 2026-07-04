@@ -7,16 +7,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { theme: "Cleanliness", count: 18 },
-  { theme: "Food", count: 12 },
-  { theme: "Host", count: 10 },
-  { theme: "Location", count: 8 },
-  { theme: "Value", count: 6 },
-  { theme: "Experience", count: 6 },
-];
+function ThemeChart({ data }) {
+  const chartData = data || [];
 
-function ThemeChart() {
   return (
     <div
       className="
@@ -37,9 +30,9 @@ function ThemeChart() {
       </h2>
 
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <XAxis dataKey="theme" />
-          <YAxis />
+          <YAxis allowDecimals={false} />
           <Tooltip />
           <Bar dataKey="count" fill="#2563eb" />
         </BarChart>

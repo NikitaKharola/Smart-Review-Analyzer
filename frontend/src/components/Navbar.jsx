@@ -1,9 +1,18 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 function Navbar({ darkMode, setDarkMode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    await supabase.auth.signOut();
+    setOpen(false);
+    navigate("/login");
+  };
 
   const linkClass = (path) =>
     `hover:text-blue-400 transition ${
@@ -36,6 +45,7 @@ function Navbar({ darkMode, setDarkMode }) {
 
           <Link
             to="/login"
+            onClick={handleLogout}
             className="hover:text-blue-400 transition"
           >
             Logout

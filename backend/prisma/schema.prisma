@@ -1,0 +1,41 @@
+// Prisma schema — this is your Deliverable 1 schema file for Week 5.
+//
+// Database choice: PostgreSQL, hosted by Supabase.
+// Why: our data (reviews) is structured with fixed fields (username,
+// text, rating, sentiment, theme) and a clear relationship to the
+// logged-in user who wrote it — a relational model fits better than a
+// flexible document store here.
+//
+// Note: user sign-in/sign-up itself is handled separately by Supabase
+// Auth (its own managed "auth.users" table) — Prisma here only owns
+// our app-specific "reviews" table, and optionally links to that user.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Review {
+  id             Int      @id @default(autoincrement())
+  username       String
+  reviewText     String   @map("review_text")
+  rating         Int
+  sentiment      String?
+  theme          String?
+  confidence     Decimal? @db.Decimal(5, 2)
+  positivePoints String?  @map("positive_points")
+  negativePoints String?  @map("negative_points")
+  suggestedReply String?  @map("suggested_reply")
+
+  // Optional link to the Supabase Auth user who submitted this review.
+  // Nullable because guests can also submit reviews without logging in.
+  userId         String?  @map("user_id") @db.Uuid
+
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("reviews")
+}

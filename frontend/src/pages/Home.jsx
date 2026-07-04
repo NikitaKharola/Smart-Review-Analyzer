@@ -1,19 +1,81 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Hero from "../components/Hero";
 import Card from "../components/Card";
 import SentimentChart from "../components/SentimentChart";
 import ThemeChart from "../components/ThemeChart";
 import VoiceAssistant from "../components/VoiceAssistant";
 import { Button } from "../components/ui";
+import { supabase } from "../supabaseClient";
+import { isLoggedIn, fetchReviews, fetchStats, saveReview } from "../api";
 function Home() {
   const [reviews, setReviews] = useState([]);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewerName, setReviewerName] = useState("");
+  const [rating, setRating] = useState(5);
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState("");
+  const [stats, setStats] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(null); // null = still checking
 
 useEffect(() => {
-  fetch("http://localhost:5000/api/reviews")
-    .then((res) => res.json())
-    .then((data) => setReviews(data))
-    .catch((err) => console.error(err));
+  isLoggedIn().then((yes) => {
+    setLoggedIn(yes);
+    if (!yes) return;
+
+    fetchReviews().then(setReviews).catch((err) => console.error(err));
+    fetchStats().then(setStats).catch((err) => console.error(err));
+  });
 }, []);
+
+  const sentimentChartData = stats
+    ? Object.entries(stats.sentimentCounts).map(([name, value]) => ({ name, value }))
+    : null;
+
+  const themeChartData = stats
+    ? Object.entries(stats.themeCounts).map(([theme, count]) => ({ theme, count }))
+    : null;
+
+  const handleAnalyze = async () => {
+    if (!reviewText.trim()) {
+      setAnalyzeError("Please paste a review before analyzing.");
+      return;
+    }
+    if (!reviewerName.trim()) {
+      setAnalyzeError("Please enter your name.");
+      return;
+    }
+    setAnalyzeError("");
+    setAnalyzing(true);
+    try {
+      const data = await saveReview({
+        username: reviewerName,
+        review: reviewText,
+        rating,
+      });
+
+      setAnalysis({
+        sentiment: data.sentiment,
+        theme: data.theme,
+        confidence: data.confidence,
+        response: data.response,
+      });
+
+      // Show the new review immediately without waiting for a page reload
+      setReviews((prev) => [
+        { id: data.id, username: data.username, review: data.review, rating: data.rating },
+        ...prev,
+      ]);
+
+      setReviewText("");
+    } catch (err) {
+      console.error(err);
+      setAnalyzeError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300">
 
@@ -111,11 +173,11 @@ useEffect(() => {
         <div className="grid md:grid-cols-2 gap-8">
 
           <div className="bg-white/60 backdrop-blur-xl border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl transition">
-            <SentimentChart />
+            <SentimentChart data={sentimentChartData} />
           </div>
 
           <div className="bg-white/60 backdrop-blur-xl border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl transition">
-            <ThemeChart />
+            <ThemeChart data={themeChartData} />
           </div>
 
         </div>
@@ -152,11 +214,16 @@ useEffect(() => {
 
       {/* Voice Assistant */}
       <section className="max-w-7xl mx-auto px-6 py-20">
-        <VoiceAssistant />
+        <VoiceAssistant
+          onTranscript={(text) => {
+            setReviewText(text);
+            document.getElementById("try-review-analyzer")?.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
       </section>
 
       {/* Review Preview */}
-<section className="bg-slate-50 dark:bg-slate-900 py-24 transition-colors duration-300">
+<section id="try-review-analyzer" className="bg-slate-50 dark:bg-slate-900 py-24 transition-colors duration-300">
 
   <div className="max-w-5xl mx-auto px-6">
 
@@ -164,7 +231,41 @@ useEffect(() => {
       Try Review Analyzer
     </h2>
 
+    {loggedIn === false && (
+      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-gray-100 dark:border-slate-700 rounded-2xl p-10 shadow-xl text-center">
+        <p className="text-lg text-slate-700 dark:text-slate-200 mb-4">
+          This is a private tool for property owners — log in to paste and analyze your own guest reviews.
+        </p>
+        <Link
+          to="/login"
+          className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+        >
+          Log in / Create account
+        </Link>
+      </div>
+    )}
+
+    {loggedIn && (
     <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-gray-100 dark:border-slate-700 rounded-2xl p-8 shadow-xl">
+
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Your name"
+          value={reviewerName}
+          onChange={(e) => setReviewerName(e.target.value)}
+          className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {[5, 4, 3, 2, 1].map((n) => (
+            <option key={n} value={n}>{"⭐".repeat(n)} ({n}/5)</option>
+          ))}
+        </select>
+      </div>
 
       <textarea
         className="
@@ -184,10 +285,16 @@ useEffect(() => {
         "
         rows="5"
         placeholder="Paste guest reviews here..."
+        value={reviewText}
+        onChange={(e) => setReviewText(e.target.value)}
       />
 
+      {analyzeError && (
+        <p className="mt-2 text-sm text-red-500">{analyzeError}</p>
+      )}
+
     <Button
-  text="Analyze Reviews"
+  text={analyzing ? "Analyzing..." : "Analyze Reviews"}
   className="
     mt-5
     bg-blue-600
@@ -197,39 +304,43 @@ useEffect(() => {
     rounded-xl
     shadow-md
     transition
+    disabled:opacity-60
   "
-  onClick={() => console.log("Analyze Reviews")}
+  onClick={handleAnalyze}
 />
 
-      <div
-        className="
-        mt-8
-        bg-slate-50
-        dark:bg-slate-900
-        rounded-xl
-        p-6
-        border
-        border-gray-100
-        dark:border-slate-700
-        "
-      >
+      {analysis && (
+        <div
+          className="
+          mt-8
+          bg-slate-50
+          dark:bg-slate-900
+          rounded-xl
+          p-6
+          border
+          border-gray-100
+          dark:border-slate-700
+          "
+        >
 
-        <h3 className="font-bold text-xl mb-4 text-slate-900 dark:text-white">
-          Example Result
-        </h3>
+          <h3 className="font-bold text-xl mb-4 text-slate-900 dark:text-white">
+            Analysis Result
+          </h3>
 
-        <div className="space-y-2 text-gray-700 dark:text-gray-300">
+          <div className="space-y-2 text-gray-700 dark:text-gray-300">
 
-          <p><strong>Sentiment:</strong> Positive</p>
-          <p><strong>Theme:</strong> Cleanliness</p>
-          <p><strong>Confidence:</strong> 92%</p>
-          <p><strong>Response:</strong> Thank you for your valuable feedback.</p>
+            <p><strong>Sentiment:</strong> {analysis.sentiment}</p>
+            <p><strong>Theme:</strong> {analysis.theme}</p>
+            <p><strong>Confidence:</strong> {analysis.confidence}%</p>
+            <p><strong>Response:</strong> {analysis.response}</p>
+
+          </div>
 
         </div>
-
-      </div>
+      )}
 
     </div>
+    )}
 
   </div>
 
@@ -238,8 +349,16 @@ useEffect(() => {
 <section className="max-w-7xl mx-auto px-6 py-20">
 
   <h2 className="text-4xl font-bold text-center mb-10">
-    Reviews from Backend
+    Your Reviews
   </h2>
+
+  {loggedIn === false && (
+    <p className="text-center text-slate-500">Log in to see your saved reviews here.</p>
+  )}
+
+  {loggedIn && reviews.length === 0 && (
+    <p className="text-center text-slate-500">No reviews yet — analyze one above to get started.</p>
+  )}
 
   <div className="grid md:grid-cols-2 gap-6">
 
@@ -250,7 +369,7 @@ useEffect(() => {
       >
         <h3 className="text-xl font-bold">{review.username}</h3>
 
-        <p className="mt-3">{review.review}</p>
+        <p className="mt-3">{review.review ?? review.review_text}</p>
 
         <p className="mt-3 text-yellow-600">
           ⭐ Rating: {review.rating}/5

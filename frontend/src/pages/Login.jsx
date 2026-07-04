@@ -1,7 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // If already logged in, skip straight to the dashboard
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/dashboard");
+    });
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
+        navigate("/dashboard");
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullname } },
+        });
+        if (signUpError) throw signUpError;
+        setMessage("Account created! Check your email to confirm, then log in.");
+        setIsLogin(true);
+      }
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -16,9 +63,7 @@ function Login() {
     >
       {/* FLOATING BLOBS */}
       <div className="blob w-72 h-72 bg-blue-300 top-10 left-10"></div>
-
       <div className="blob w-80 h-80 bg-purple-300 bottom-10 right-10"></div>
-
       <div className="blob w-64 h-64 bg-pink-300 top-1/2 left-1/3"></div>
 
       {/* LOGIN CARD */}
@@ -49,14 +94,28 @@ function Login() {
           </p>
         </div>
 
+        {error && (
+          <p className="mb-4 text-sm text-red-500 bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="mb-4 text-sm text-green-600 bg-green-50 dark:bg-green-900/30 rounded-lg px-3 py-2">
+            {message}
+          </p>
+        )}
+
         {/* FORM */}
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {!isLogin && (
             <input
               id="fullname"
               name="fullname"
               type="text"
               placeholder="Full Name"
+              value={fullname}
+              onChange={(e) => setFullname(e.target.value)}
+              required
               className="
               w-full px-4 py-3 rounded-xl
               border border-gray-300 dark:border-slate-600
@@ -74,6 +133,9 @@ function Login() {
             type="email"
             placeholder="Email"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             className="
             w-full px-4 py-3 rounded-xl
             border border-gray-300 dark:border-slate-600
@@ -90,6 +152,10 @@ function Login() {
             type="password"
             placeholder="Password"
             autoComplete={isLogin ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
             className="
             w-full px-4 py-3 rounded-xl
             border border-gray-300 dark:border-slate-600
@@ -102,14 +168,16 @@ function Login() {
 
           <button
             type="submit"
+            disabled={loading}
             className="
             w-full py-3 rounded-xl
             bg-blue-600 hover:bg-blue-700
             text-white font-semibold
             shadow-lg transition
+            disabled:opacity-60
             "
           >
-            {isLogin ? "Login" : "Register"}
+            {loading ? "Please wait..." : isLogin ? "Login" : "Register"}
           </button>
         </form>
 
@@ -120,7 +188,7 @@ function Login() {
               New here?{" "}
               <span
                 className="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
-                onClick={() => setIsLogin(false)}
+                onClick={() => { setIsLogin(false); setError(""); setMessage(""); }}
               >
                 Create account
               </span>
@@ -130,7 +198,7 @@ function Login() {
               Already have account?{" "}
               <span
                 className="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
-                onClick={() => setIsLogin(true)}
+                onClick={() => { setIsLogin(true); setError(""); setMessage(""); }}
               >
                 Login
               </span>
