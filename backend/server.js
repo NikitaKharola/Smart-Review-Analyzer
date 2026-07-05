@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const reviewRoutes = require("./routes/reviewRoutes");
+const accountRoutes = require("./routes/accountRoutes");
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/account", accountRoutes);
 
 const PORT = process.env.PORT || 5000;
 

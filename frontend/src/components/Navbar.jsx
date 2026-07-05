@@ -1,11 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 function Navbar({ darkMode, setDarkMode }) {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const profileRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data?.session?.user || null);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // Close the profile dropdown if you click anywhere outside it
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const displayName = user?.user_metadata?.full_name || user?.email || "Guest";
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -65,7 +93,61 @@ function Navbar({ darkMode, setDarkMode }) {
             {darkMode ? "☀️" : "🌙"}
           </button>
 
-          <span className="text-2xl cursor-pointer">👤</span>
+          <div className="relative" ref={profileRef}>
+            <span
+              className="text-2xl cursor-pointer"
+              onClick={() => setProfileOpen(!profileOpen)}
+            >
+              👤
+            </span>
+
+            {profileOpen && (
+              <div
+                className="
+                absolute right-0 mt-3 w-56
+                bg-white dark:bg-slate-800
+                text-slate-900 dark:text-white
+                rounded-xl shadow-xl
+                border border-gray-100 dark:border-slate-700
+                p-4 z-50
+                "
+              >
+                {user ? (
+                  <>
+                    <p className="text-xs text-slate-400 mb-1">Logged in as</p>
+                    <p className="font-semibold break-words">{displayName}</p>
+                    {user?.user_metadata?.full_name && (
+                      <p className="text-xs text-slate-400 mt-1 break-words">{user.email}</p>
+                    )}
+                    <Link
+                      to="/settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="block mt-3 text-sm text-blue-500 hover:text-blue-600 font-medium"
+                    >
+                      Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="mt-2 w-full text-left text-sm text-red-500 hover:text-red-600 font-medium"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-500 mb-2">Not logged in</p>
+                    <Link
+                      to="/login"
+                      onClick={() => setProfileOpen(false)}
+                      className="text-sm text-blue-500 font-medium"
+                    >
+                      Log in / Create account
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* MOBILE BUTTON */}
@@ -121,7 +203,16 @@ function Navbar({ darkMode, setDarkMode }) {
             {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
 
-          <div className="text-2xl">👤 Profile</div>
+          <div className="text-base border-t border-slate-700 pt-3">
+            {user ? (
+              <>
+                <p className="text-xs text-slate-400">Logged in as</p>
+                <p className="font-semibold break-words">👤 {displayName}</p>
+              </>
+            ) : (
+              <p>👤 Not logged in</p>
+            )}
+          </div>
         </div>
       )}
     </nav>
