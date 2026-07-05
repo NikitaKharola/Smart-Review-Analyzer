@@ -7,7 +7,14 @@ import ThemeChart from "../components/ThemeChart";
 import VoiceAssistant from "../components/VoiceAssistant";
 import { Button } from "../components/ui";
 import { supabase } from "../supabaseClient";
-import { isLoggedIn, fetchReviews, fetchStats, saveReview } from "../api";
+import {
+  isLoggedIn,
+  fetchReviews,
+  fetchStats,
+  saveReview,
+  updateReview,
+  deleteReview,
+} from "../api";
 function Home() {
   const [reviews, setReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
@@ -17,7 +24,11 @@ function Home() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState("");
   const [stats, setStats] = useState(null);
-  const [loggedIn, setLoggedIn] = useState(null); // null = still checking
+  const [loggedIn, setLoggedIn] = useState(null); 
+  const [editingId, setEditingId] = useState(null);
+const [editReview, setEditReview] = useState("");
+const [editUsername, setEditUsername] = useState("");
+const [editRating, setEditRating] = useState(5);// null = still checking
 
 useEffect(() => {
   isLoggedIn().then((yes) => {
@@ -76,6 +87,40 @@ useEffect(() => {
       setAnalyzing(false);
     }
   };
+  const handleDelete = async (id) => {
+  if (!window.confirm("Delete this review?")) return;
+
+  try {
+    await deleteReview(id);
+
+    setReviews((prev) => prev.filter((r) => r.id !== id));
+
+    const updatedStats = await fetchStats();
+    setStats(updatedStats);
+  } catch (err) {
+    alert(err.message);
+  }
+};
+const handleUpdate = async () => {
+  try {
+    const updated = await updateReview(editingId, {
+      username: editUsername,
+      review: editReview,
+      rating: editRating,
+    });
+
+    setReviews((prev) =>
+      prev.map((r) => (r.id === editingId ? updated : r))
+    );
+
+    setEditingId(null);
+
+    const updatedStats = await fetchStats();
+    setStats(updatedStats);
+  } catch (err) {
+    alert(err.message);
+  }
+};
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300">
 
@@ -367,13 +412,76 @@ useEffect(() => {
         key={review.id}
         className="bg-white rounded-xl shadow-md p-6 border"
       >
-        <h3 className="text-xl font-bold">{review.username}</h3>
+        {editingId === review.id ? (
+  <>
+    <input
+      className="border p-2 w-full mb-2"
+      value={editUsername}
+      onChange={(e) => setEditUsername(e.target.value)}
+    />
 
-        <p className="mt-3">{review.review ?? review.review_text}</p>
+    <textarea
+      className="border p-2 w-full mb-2"
+      value={editReview}
+      onChange={(e) => setEditReview(e.target.value)}
+    />
 
-        <p className="mt-3 text-yellow-600">
-          ⭐ Rating: {review.rating}/5
-        </p>
+    <select
+      className="border p-2 w-full mb-3"
+      value={editRating}
+      onChange={(e) => setEditRating(Number(e.target.value))}
+    >
+      {[1,2,3,4,5].map((n) => (
+        <option key={n} value={n}>{n}</option>
+      ))}
+    </select>
+
+    <button
+      onClick={handleUpdate}
+      className="bg-green-600 text-white px-4 py-2 rounded mr-2"
+    >
+      Save
+    </button>
+
+    <button
+      onClick={() => setEditingId(null)}
+      className="bg-gray-500 text-white px-4 py-2 rounded"
+    >
+      Cancel
+    </button>
+  </>
+) : (
+  <>
+    <h3 className="text-xl font-bold">{review.username}</h3>
+
+    <p className="mt-3">{review.review}</p>
+
+    <p className="mt-3 text-yellow-600">
+      ⭐ Rating: {review.rating}/5
+    </p>
+
+    <div className="mt-5 flex gap-3">
+      <button
+        onClick={() => {
+          setEditingId(review.id);
+          setEditUsername(review.username);
+          setEditReview(review.review);
+          setEditRating(review.rating);
+        }}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Edit
+      </button>
+
+      <button
+        onClick={() => handleDelete(review.id)}
+        className="bg-red-600 text-white px-4 py-2 rounded"
+      >
+        Delete
+      </button>
+    </div>
+  </>
+)}
       </div>
     ))}
 

@@ -66,3 +66,40 @@ export async function downloadReport() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// Update a review
+export async function updateReview(id, { username, review, rating }) {
+  const headers = await getAuthHeaders();
+
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      username,
+      review,
+      rating,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error((await res.json()).message || "Failed to update review");
+  }
+
+  return res.json();
+}
+
+// Delete a review
+export async function deleteReview(id) {
+  const headers = await getAuthHeaders();
+
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error((await res.json()).message || "Failed to delete review");
+  }
+
+  return res.json();
+}
