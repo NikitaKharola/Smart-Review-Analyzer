@@ -4,6 +4,8 @@ const router = express.Router();
 const prisma = require("../prismaClient");
 const { analyzeText } = require("../utils/analyzer");
 const { requireAuth } = require("../middleware/auth");
+const { buildReportData } = require("../utils/report");
+const { generateReportPdf } = require("../utils/generatePdf");
 
 function serializeReview(r) {
   return {
@@ -95,6 +97,23 @@ router.get("/search", async (req, res) => {
     res.status(200).json(reviews.map(serializeReview));
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// GET a downloadable PDF report: what's working well, what needs improvement
+router.get("/report", async (req, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { userId: req.userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const reportData = buildReportData(reviews);
+    const ownerLabel = req.userFullName || req.userEmail || "Property Owner";
+
+    generateReportPdf(res, reportData, ownerLabel);
+  } catch (err) {
+    res.status(500).json({ message: err.message || "Could not generate report." });
   }
 });
 

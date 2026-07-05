@@ -1,88 +1,278 @@
-# React + Vite
+# Smart Review Analyzer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project Overview
 
-Currently, two official plugins are available:
+Smart Review Analyzer is a full-stack web application that helps users analyze customer reviews using AI.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Users can:
+- Sign up and log in securely using Supabase Authentication.
+- Submit product or service reviews.
+- Get AI-generated sentiment analysis.
+- View detected themes and confidence score.
+- See positive and negative points.
+- Get an AI-generated suggested reply.
+- Store all reviews permanently in a PostgreSQL database.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Tech Stack
 
-## Expanding the ESLint configuration
+### Frontend
+- React
+- Vite
+- Axios
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- PostgreSQL (Supabase)
+
+### ORM
+- Prisma
+
+### Authentication
+- Supabase Auth
+
+### AI
+- Google Gemini API
+
+---
+
+# Why PostgreSQL?
+
+We chose PostgreSQL because our data has a fixed structure.
+
+Each review contains:
+- Username
+- Review text
+- Rating
+- Sentiment
+- Theme
+- Confidence score
+
+Each review also belongs to a user, so a relational database is the best choice.
+
+---
+
+# Database Schema
+
+The project contains two main entities.
+
+## 1. auth.users
+
+This table is managed automatically by Supabase Authentication.
+
+It stores:
+- User ID
+- Email
+- Login information
+
+We do not modify this table directly.
+
+---
+
+## 2. reviews
+
+This table stores all review information.
+
+Fields:
+- id
+- username
+- review_text
+- rating
+- sentiment
+- theme
+- confidence
+- positive_points
+- negative_points
+- suggested_reply
+- user_id
+- created_at
+
+Each review is connected to one user using the **user_id** field.
+
+One user can have many reviews.
+
+---
+
+## Schema Diagram
+
+![Database Schema](W5_SchemaDiagram.png)
 
 
 
+---
 
+# Database Setup
 
-# Database Integration (Week 5)
+### Step 1
 
-## Database choice: PostgreSQL, hosted on Supabase
+Create a free project on Supabase.
 
-We chose PostgreSQL over MongoDB because our review data is structured with
-fixed, predictable fields (username, review text, rating, sentiment, theme,
-confidence, etc.) and has a clear relationship to the user who submitted it —
-a relational model fits this better than a flexible document store.
+https://supabase.com
 
-- **Database**: PostgreSQL (Supabase free tier)
-- **ORM**: Prisma
-- **Auth**: Supabase Auth (separate managed service — its own `auth.users`
-  table, not owned by our Prisma schema)
+---
 
-## Schema
+### Step 2
 
-See `backend/prisma/schema.prisma` for the full model, and
-`W5_SchemaDiagram.png` for the visual diagram.
+Open the SQL Editor and create the reviews table.
 
-**Entities:**
-1. **`auth.users`** — managed by Supabase Auth. Handles sign up, login,
-   logout, and sessions. We don't touch this table directly; Supabase
-   manages it.
-2. **`reviews`** — our own table, owned by Prisma. Each review optionally
-   links to the user who submitted it via `user_id` (nullable, since guests
-   can also submit reviews without logging in).
+```sql
+CREATE TABLE reviews (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username TEXT NOT NULL,
+    review_text TEXT NOT NULL,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    sentiment TEXT,
+    theme TEXT,
+    confidence DECIMAL(5,2),
+    positive_points TEXT,
+    negative_points TEXT,
+    suggested_reply TEXT,
+    user_id UUID REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
-**Relationship:** one user (`auth.users`) can have many `reviews` — a
-one-to-many relationship via `reviews.user_id -> auth.users.id`.
+### Step 3
 
-## Set up the database
+Copy the PostgreSQL connection string.
 
-1. Create a free project at [supabase.com](https://supabase.com).
-2. In the Supabase SQL Editor, run:
-   ```sql
-   CREATE TABLE reviews (
-       id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-       username TEXT NOT NULL,
-       review_text TEXT NOT NULL,
-       rating INT CHECK (rating BETWEEN 1 AND 5),
-       sentiment TEXT CHECK (sentiment IN ('Positive', 'Neutral', 'Negative')),
-       theme TEXT,
-       confidence DECIMAL(5,2),
-       positive_points TEXT,
-       negative_points TEXT,
-       suggested_reply TEXT,
-       user_id UUID REFERENCES auth.users(id),
-       created_at TIMESTAMPTZ DEFAULT NOW()
-   );
-   ```
-3. Go to **Project Settings -> Database -> Connection string -> URI** and
-   copy it.
-4. In `backend/.env`, set:
-   ```
-   DATABASE_URL="postgresql://postgres:YOUR-PASSWORD@db.YOUR-PROJECT-REF.supabase.co:5432/postgres"
-   ```
-5. In `backend/`, run:
-   ```
-   npm install
-   npx prisma generate
-   ```
-6. Start the backend: `npm start`. All review endpoints now read/write to
-   this real Postgres table through Prisma.
+Go to:
 
-For frontend auth (sign up / login / logout), see `frontend/.env.example`
-for the separate Supabase Auth keys (`VITE_SUPABASE_URL`,
-`VITE_SUPABASE_ANON_KEY`) — these are independent of `DATABASE_URL` above.
+Project Settings → Database → Connection String
+
+---
+
+### Step 4
+
+Add it to **backend/.env**
+
+```env
+DATABASE_URL="your_database_url"
+```
+
+---
+
+### Step 5
+
+Install dependencies.
+
+```bash
+cd backend
+npm install
+npx prisma generate
+```
+
+---
+
+### Step 6
+
+Start the backend.
+
+```bash
+npm start
+```
+
+---
+
+# CRUD Operations
+
+The application supports complete CRUD operations.
+
+✅ Create a review
+
+✅ Read reviews
+
+✅ Update a review
+
+✅ Delete a review
+
+All data is stored in PostgreSQL, so it remains available even after restarting the server.
+
+---
+
+# Environment Variables
+
+## Backend
+
+```env
+DATABASE_URL=your_database_url
+JWT_SECRET=your_secret
+PORT=5000
+```
+
+## Frontend
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+---
+
+# Project Structure
+
+```
+smart-review-analyzer/
+
+│
+
+├── backend/
+
+│ ├── controllers/
+
+│ ├── middleware/
+
+│ ├── prisma/
+
+│ ├── routes/
+
+│ ├── utils/
+
+│ └── server.js
+
+│
+
+├── frontend/
+
+│ ├── src/
+
+│ ├── components/
+
+│ ├── pages/
+
+│ └── App.jsx
+
+│
+
+└── README.md
+```
+
+---
+
+# Features
+
+- User Registration
+- User Login
+- AI Review Analysis
+- Sentiment Detection
+- Theme Detection
+- Confidence Score
+- Suggested Reply
+- PostgreSQL Database Storage
+- Update Reviews
+- Delete Reviews
+- Generate PDF Report
+
+---
+
+# Conclusion
+
+This project uses PostgreSQL with Prisma ORM to store review data permanently.
+
+Supabase Authentication manages user login, while Prisma handles database operations.
+
+The application supports full CRUD functionality with persistent data storage.

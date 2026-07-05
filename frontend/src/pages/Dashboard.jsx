@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SentimentChart from "../components/SentimentChart";
 import ThemeChart from "../components/ThemeChart";
-import { isLoggedIn, fetchStats } from "../api";
+import { isLoggedIn, fetchStats, downloadReport } from "../api";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportError, setReportError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -101,13 +103,24 @@ function Dashboard() {
 
         </div>
 
-        <div className="flex flex-wrap gap-4 mb-10">
+        <div className="flex flex-wrap items-center gap-4 mb-2">
 
           <button
-            onClick={() => window.print()}
-            className="bg-blue-500 text-white px-6 py-3 rounded-xl shadow-sm hover:bg-blue-600 hover:shadow-md transition"
+            onClick={async () => {
+              setReportError("");
+              setGeneratingReport(true);
+              try {
+                await downloadReport();
+              } catch (err) {
+                setReportError(err.message || "Could not generate report.");
+              } finally {
+                setGeneratingReport(false);
+              }
+            }}
+            disabled={generatingReport}
+            className="bg-blue-500 text-white px-6 py-3 rounded-xl shadow-sm hover:bg-blue-600 hover:shadow-md transition disabled:opacity-60"
           >
-            📄 Export PDF
+            {generatingReport ? "Generating..." : "📄 Export Report (PDF)"}
           </button>
 
           <button
@@ -134,6 +147,9 @@ function Dashboard() {
           </button>
 
         </div>
+
+        {reportError && <p className="text-red-500 mb-8">{reportError}</p>}
+        {!reportError && <div className="mb-10" />}
 
         <div className="grid md:grid-cols-2 gap-8 mb-10">
 

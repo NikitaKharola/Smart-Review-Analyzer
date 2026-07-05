@@ -50,3 +50,19 @@ export async function analyzePreview(text) {
   if (!res.ok) throw new Error((await res.json()).message || "Failed to analyze");
   return res.json();
 }
+
+export async function downloadReport() {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/report`, { headers });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || "Failed to generate report");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "guest-review-report.pdf";
+  a.click();
+  URL.revokeObjectURL(url);
+}

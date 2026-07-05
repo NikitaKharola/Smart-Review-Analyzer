@@ -21,6 +21,8 @@ async function requireAuth(req, res, next) {
   }
 
   req.userId = data.user.id;
+  req.userEmail = data.user.email;
+  req.userFullName = data.user.user_metadata?.full_name;
   next();
 }
 
