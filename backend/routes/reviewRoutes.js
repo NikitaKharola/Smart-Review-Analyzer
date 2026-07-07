@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const prisma = require("../prismaClient");
-const { analyzeText } = require("../utils/analyzer");
+const { analyzeText, extractRatingFromText } = require("../utils/analyzer");
 const { requireAuth } = require("../middleware/auth");
 const { buildReportData } = require("../utils/report");
 const { generateReportPdf } = require("../utils/generatePdf");
@@ -97,6 +97,63 @@ router.get("/search", async (req, res) => {
     res.status(200).json(reviews.map(serializeReview));
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// POST multiple reviews at once (pasted together), analyze + save each,
+// and return an aggregate summary of the whole batch.
+router.post("/bulk", async (req, res) => {
+  const { username, reviews } = req.body;
+
+  if (!username || !Array.isArray(reviews) || reviews.length === 0) {
+    return res.status(400).json({
+      message: "Please provide a name and at least one review.",
+    });
+  }
+
+  try {
+    const saved = [];
+    const sentimentCounts = { Positive: 0, Neutral: 0, Negative: 0 };
+    const themeCounts = {};
+
+    for (const text of reviews) {
+      const trimmed = (text || "").trim();
+      if (!trimmed) continue;
+
+      const analysis = analyzeText(trimmed);
+      const { rating: extractedRating, cleanText } = extractRatingFromText(trimmed);
+      // Prefer a real rating found in the text itself; only guess from
+      // sentiment as a last resort when no rating was written at all.
+      const finalRating =
+        extractedRating ??
+        (analysis.sentiment === "Positive" ? 5 : analysis.sentiment === "Negative" ? 1 : 3);
+
+      const row = await prisma.review.create({
+        data: {
+          username,
+          reviewText: cleanText,
+          rating: finalRating,
+          sentiment: analysis.sentiment,
+          theme: analysis.theme,
+          confidence: analysis.confidence,
+          suggestedReply: analysis.response,
+          userId: req.userId,
+        },
+      });
+
+      sentimentCounts[analysis.sentiment] = (sentimentCounts[analysis.sentiment] || 0) + 1;
+      themeCounts[analysis.theme] = (themeCounts[analysis.theme] || 0) + 1;
+      saved.push(serializeReview(row));
+    }
+
+    res.status(201).json({
+      count: saved.length,
+      sentimentCounts,
+      themeCounts,
+      reviews: saved,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message || "Could not process reviews." });
   }
 });
 

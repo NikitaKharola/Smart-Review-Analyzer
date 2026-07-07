@@ -3,6 +3,7 @@ function Card({
   description,
   image,
   action,
+  onAction,
 }) {
   return (
     <div
@@ -56,6 +57,7 @@ function Card({
 
         {action && (
           <button
+            onClick={onAction}
             className="
             w-full
             bg-gradient-to-r

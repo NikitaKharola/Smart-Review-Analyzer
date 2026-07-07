@@ -1,4 +1,4 @@
-function Hero() {
+function Hero({ onAnalyzeClick, onDemoClick }) {
   return (
     <section
       className="
@@ -14,7 +14,6 @@ function Hero() {
     >
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row items-center justify-between gap-10">
 
-        {/* TEXT */}
         <div className="md:w-1/2">
           <h1 className="text-5xl font-bold mb-6">
             AI Powered Guest Review Analysis
@@ -27,6 +26,7 @@ function Hero() {
 
           <div className="flex gap-4">
             <button
+              onClick={onAnalyzeClick}
               className="
               bg-white
               text-blue-700
@@ -44,6 +44,7 @@ function Hero() {
             </button>
 
             <button
+              onClick={onDemoClick}
               className="
               border
               border-white
@@ -60,7 +61,6 @@ function Hero() {
           </div>
         </div>
 
-        {/* IMAGE */}
         <div className="md:w-1/2 flex justify-center md:justify-end">
           <img
             src="https://images.unsplash.com/photo-1566073771259-6a8506099945"

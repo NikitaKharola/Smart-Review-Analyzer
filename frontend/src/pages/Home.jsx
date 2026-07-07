@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Hero from "../components/Hero";
 import Card from "../components/Card";
 import SentimentChart from "../components/SentimentChart";
@@ -12,15 +12,18 @@ import {
   fetchReviews,
   fetchStats,
   saveReview,
+  saveBulkReviews,
   updateReview,
   deleteReview,
 } from "../api";
 function Home() {
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
   const [reviewerName, setReviewerName] = useState("");
   const [rating, setRating] = useState(5);
   const [analysis, setAnalysis] = useState(null);
+  const [batchResult, setBatchResult] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState("");
   const [stats, setStats] = useState(null);
@@ -50,34 +53,54 @@ useEffect(() => {
 
   const handleAnalyze = async () => {
     if (!reviewText.trim()) {
-      setAnalyzeError("Please paste a review before analyzing.");
+      setAnalyzeError("Please paste one or more reviews before analyzing.");
       return;
     }
     if (!reviewerName.trim()) {
-      setAnalyzeError("Please enter your name.");
+      setAnalyzeError("Please enter a name.");
       return;
     }
     setAnalyzeError("");
     setAnalyzing(true);
+    setAnalysis(null);
+    setBatchResult(null);
+
+    // Split on blank lines first (paragraph-style paste). If that only
+    // finds one block, fall back to splitting on single newlines
+    // (one short review per line).
+    let blocks = reviewText.split(/\n\s*\n+/).map((b) => b.trim()).filter(Boolean);
+    if (blocks.length === 1) {
+      const lines = reviewText.split("\n").map((l) => l.trim()).filter(Boolean);
+      if (lines.length > 1) blocks = lines;
+    }
+
     try {
-      const data = await saveReview({
-        username: reviewerName,
-        review: reviewText,
-        rating,
-      });
+      if (blocks.length > 1) {
+        const data = await saveBulkReviews({ username: reviewerName, reviews: blocks });
+        setBatchResult(data);
+        setReviews((prev) => [
+          ...data.reviews.map((r) => ({ id: r.id, username: r.username, review: r.review, rating: r.rating })),
+          ...prev,
+        ]);
+      } else {
+        const data = await saveReview({
+          username: reviewerName,
+          review: blocks[0],
+          rating,
+        });
 
-      setAnalysis({
-        sentiment: data.sentiment,
-        theme: data.theme,
-        confidence: data.confidence,
-        response: data.response,
-      });
+        setAnalysis({
+          sentiment: data.sentiment,
+          theme: data.theme,
+          confidence: data.confidence,
+          response: data.response,
+        });
 
-      // Show the new review immediately without waiting for a page reload
-      setReviews((prev) => [
-        { id: data.id, username: data.username, review: data.review, rating: data.rating },
-        ...prev,
-      ]);
+        setReviews((prev) => [
+          { id: data.id, username: data.username, review: data.review, rating: data.rating },
+          ...prev,
+        ]);
+      }
 
       setReviewText("");
     } catch (err) {
@@ -124,7 +147,14 @@ const handleUpdate = async () => {
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300">
 
-      <Hero />
+      <Hero
+        onAnalyzeClick={() =>
+          document.getElementById("try-review-analyzer")?.scrollIntoView({ behavior: "smooth" })
+        }
+        onDemoClick={() =>
+          document.getElementById("analytics-preview")?.scrollIntoView({ behavior: "smooth" })
+        }
+      />
 
       {/* Statistics */}
       <section className="max-w-7xl mx-auto py-20 px-6">
@@ -132,9 +162,9 @@ const handleUpdate = async () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
 
           {[
-            { icon: "📊", value: "60+", label: "Reviews Analyzed", color: "text-blue-600" },
+            { icon: "📊", value: "100+", label: "Reviews Analyzed", color: "text-blue-600" },
             { icon: "🎯", value: "95%", label: "Accuracy", color: "text-green-600" },
-            { icon: "🏷️", value: "6", label: "Theme Categories", color: "text-purple-600" },
+            { icon: "🏷️", value: "30+", label: "Theme Categories", color: "text-purple-600" },
             { icon: "⚡", value: "24/7", label: "Insights Ready", color: "text-orange-500" },
           ].map((item, i) => (
             <div
@@ -176,6 +206,9 @@ const handleUpdate = async () => {
             description="Classify reviews into Positive, Neutral and Negative."
             image="https://images.unsplash.com/photo-1551288049-bebda4e38f71"
             action="Explore"
+            onAction={() =>
+              document.getElementById("try-review-analyzer")?.scrollIntoView({ behavior: "smooth" })
+            }
           />
 
           <Card
@@ -183,6 +216,9 @@ const handleUpdate = async () => {
             description="Detect key themes like Food, Host, Cleanliness, Value."
             image="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
             action="Explore"
+            onAction={() =>
+              document.getElementById("try-review-analyzer")?.scrollIntoView({ behavior: "smooth" })
+            }
           />
 
           <Card
@@ -190,6 +226,9 @@ const handleUpdate = async () => {
             description="Generate smart replies automatically."
             image="https://images.unsplash.com/photo-1516321318423-f06f85e504b3"
             action="Explore"
+            onAction={() =>
+              document.getElementById("try-review-analyzer")?.scrollIntoView({ behavior: "smooth" })
+            }
           />
 
           <Card
@@ -197,6 +236,7 @@ const handleUpdate = async () => {
             description="Find patterns and recurring issues instantly."
             image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40"
             action="Explore"
+            onAction={() => navigate("/dashboard")}
           />
 
         </div>
@@ -204,7 +244,7 @@ const handleUpdate = async () => {
       </section>
 
       {/* Charts */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
+      <section id="analytics-preview" className="max-w-7xl mx-auto px-6 py-20">
 
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold text-slate-900">
@@ -329,7 +369,7 @@ const handleUpdate = async () => {
         focus:ring-blue-500
         "
         rows="5"
-        placeholder="Paste guest reviews here..."
+        placeholder="Paste one review, or paste several at once (separate each with a blank line) to get a combined summary..."
         value={reviewText}
         onChange={(e) => setReviewText(e.target.value)}
       />
@@ -381,6 +421,69 @@ const handleUpdate = async () => {
 
           </div>
 
+        </div>
+      )}
+
+      {batchResult && (
+        <div
+          className="
+          mt-8
+          bg-slate-50
+          dark:bg-slate-900
+          rounded-xl
+          p-6
+          border
+          border-gray-100
+          dark:border-slate-700
+          "
+        >
+          <h3 className="font-bold text-xl mb-4 text-slate-900 dark:text-white">
+            Combined Summary — {batchResult.count} review{batchResult.count !== 1 ? "s" : ""} analyzed
+          </h3>
+
+          <div className="grid sm:grid-cols-3 gap-4 mb-6">
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{batchResult.sentimentCounts.Positive}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Positive</p>
+            </div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-yellow-500">{batchResult.sentimentCounts.Neutral}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Neutral</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-red-500">{batchResult.sentimentCounts.Negative}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Negative</p>
+            </div>
+          </div>
+
+          <h4 className="font-semibold mb-2 text-slate-800 dark:text-white">Themes mentioned</h4>
+          <ul className="space-y-1 mb-6 text-sm text-slate-600 dark:text-slate-300">
+            {Object.entries(batchResult.themeCounts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([theme, count]) => (
+                <li key={theme} className="flex justify-between border-b border-gray-100 dark:border-slate-800 py-1">
+                  <span>{theme}</span>
+                  <span className="font-semibold">{count}</span>
+                </li>
+              ))}
+          </ul>
+
+          <h4 className="font-semibold mb-2 text-slate-800 dark:text-white">Individual results</h4>
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+            {batchResult.reviews.map((r) => (
+              <div key={r.id} className="text-sm bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-100 dark:border-slate-700">
+                <p className="text-slate-700 dark:text-slate-200 mb-1">"{r.review}"</p>
+                <p className="text-xs text-slate-400">
+                  {r.sentiment} · {r.theme} · {r.confidence}% confidence
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-slate-400 mt-4">
+            Want the full picture with strengths and areas to improve? Check your{" "}
+            <Link to="/dashboard" className="text-blue-500 font-medium">Dashboard</Link> and export a report there.
+          </p>
         </div>
       )}
 

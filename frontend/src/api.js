@@ -40,6 +40,17 @@ export async function saveReview({ username, review, rating }) {
   return res.json();
 }
 
+export async function saveBulkReviews({ username, reviews }) {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/bulk`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ username, reviews }),
+  });
+  if (!res.ok) throw new Error((await res.json()).message || "Failed to process reviews");
+  return res.json();
+}
+
 export async function analyzePreview(text) {
   const headers = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}/analyze`, {
