@@ -58,7 +58,7 @@ Each review also belongs to a user, so a relational database is the best choice.
 
 # Database Schema
 
-The project contains two main entities.
+![Database Schema](docs/W5_SchemaDiagram_TBI-26100045.png)
 
 ## 1. auth.users
 
