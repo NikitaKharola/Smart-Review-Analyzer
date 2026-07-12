@@ -1,36 +1,44 @@
-import { supabase } from "./supabaseClient";
-
 const BASE_URL = "http://localhost:5000/api/reviews";
+const AUTH_URL = "http://localhost:5000/api/auth";
 
-async function getAuthHeaders() {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
   return token
     ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
     : { "Content-Type": "application/json" };
 }
 
 export async function isLoggedIn() {
-  const { data } = await supabase.auth.getSession();
-  return !!data?.session;
+  const token = localStorage.getItem("token");
+  if (!token) return false;
+
+  const res = await fetch(`${AUTH_URL}/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    localStorage.removeItem("token"); // stale/expired token — clear it
+    return false;
+  }
+  return true;
 }
 
 export async function fetchReviews() {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(BASE_URL, { headers });
   if (!res.ok) throw new Error((await res.json()).message || "Failed to load reviews");
   return res.json();
 }
 
 export async function fetchStats() {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(`${BASE_URL}/stats`, { headers });
   if (!res.ok) throw new Error((await res.json()).message || "Failed to load stats");
   return res.json();
 }
 
 export async function saveReview({ username, review, rating }) {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers,
@@ -41,7 +49,7 @@ export async function saveReview({ username, review, rating }) {
 }
 
 export async function saveBulkReviews({ username, reviews }) {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(`${BASE_URL}/bulk`, {
     method: "POST",
     headers,
@@ -52,7 +60,7 @@ export async function saveBulkReviews({ username, reviews }) {
 }
 
 export async function analyzePreview(text) {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(`${BASE_URL}/analyze`, {
     method: "POST",
     headers,
@@ -63,7 +71,7 @@ export async function analyzePreview(text) {
 }
 
 export async function downloadReport() {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(`${BASE_URL}/report`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -80,7 +88,7 @@ export async function downloadReport() {
 
 // Update a review
 export async function updateReview(id, { username, review, rating }) {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
 
   const res = await fetch(`${BASE_URL}/${id}`, {
     method: "PUT",
@@ -101,7 +109,7 @@ export async function updateReview(id, { username, review, rating }) {
 
 // Delete a review
 export async function deleteReview(id) {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
 
   const res = await fetch(`${BASE_URL}/${id}`, {
     method: "DELETE",

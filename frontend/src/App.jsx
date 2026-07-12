@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -10,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import ComponentDemo from "./pages/ComponentDemo";
+import OAuthCallback from "./pages/OAuthCallback";
 
 function App() {
   const [darkMode, setDarkMode] = useState(
@@ -39,9 +41,24 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/login" element={<Login />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/oauth-callback" element={<OAuthCallback />} />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/components" element={<ComponentDemo />} />
           </Routes>
         </main>

@@ -1,10 +1,10 @@
-const supabaseAuth = require("../supabaseAuth");
+const jwt = require("jsonwebtoken");
 
 /**
  * Every request that touches review data must prove who they are.
- * The frontend sends: Authorization: Bearer <supabase-access-token>
- * We verify that token with Supabase, then attach req.userId so
- * every route below can filter data to that owner only.
+ * The frontend sends: Authorization: Bearer <our-own-jwt>
+ * We verify that token ourselves (signed with JWT_SECRET at login/register),
+ * then attach req.userId so every route below can filter data to that owner only.
  */
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
@@ -14,16 +14,15 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ message: "Not logged in. Please log in to continue." });
   }
 
-  const { data, error } = await supabaseAuth.auth.getUser(token);
-
-  if (error || !data?.user) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    req.userEmail = decoded.email;
+    req.userFullName = decoded.fullName;
+    next();
+  } catch (err) {
     return res.status(401).json({ message: "Your session has expired. Please log in again." });
   }
-
-  req.userId = data.user.id;
-  req.userEmail = data.user.email;
-  req.userFullName = data.user.user_metadata?.full_name;
-  next();
 }
 
 module.exports = { requireAuth };

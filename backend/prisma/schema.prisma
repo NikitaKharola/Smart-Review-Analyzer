@@ -1,22 +1,43 @@
-// Prisma schema — this is your Deliverable 1 schema file for Week 5.
+// Prisma schema — updated for Week 6.
 //
 // Database choice: PostgreSQL, hosted by Supabase.
-// Why: our data (reviews) is structured with fixed fields (username,
-// text, rating, sentiment, theme) and a clear relationship to the
-// logged-in user who wrote it — a relational model fits better than a
-// flexible document store here.
+// Why: our data (users, reviews) is structured with fixed fields and a
+// clear relationship between a review and the user who wrote it — a
+// relational model fits better than a flexible document store here.
 //
-// Note: user sign-in/sign-up itself is handled separately by Supabase
-// Auth (its own managed "auth.users" table) — Prisma here only owns
-// our app-specific "reviews" table, and optionally links to that user.
+// Change from Week 5: user sign-in/sign-up is no longer handled by
+// Supabase Auth. We now own our own "users" table, with bcrypt-hashed
+// passwords and JWTs issued by our own backend. Supabase is still just
+// our Postgres host — nothing more.
+//
+// Change for OAuth (this update):
+// - `password` is now optional — Google-only users never set one.
+// - `provider` / `providerId` record how the account was created and,
+//   for OAuth accounts, the Google user id, so a login can be matched
+//   back to the right row without relying on password auth at all.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  password   String?
+  fullName   String?  @map("full_name")
+  provider   String   @default("local") @map("provider")
+  providerId String?  @map("provider_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  reviews    Review[]
+
+  @@map("users")
 }
 
 model Review {
@@ -31,9 +52,10 @@ model Review {
   negativePoints String?  @map("negative_points")
   suggestedReply String?  @map("suggested_reply")
 
-  // Optional link to the Supabase Auth user who submitted this review.
-  // Nullable because guests can also submit reviews without logging in.
+  // Link to the user who submitted this review. Still nullable so
+  // guest submissions (if you support them) keep working.
   userId         String?  @map("user_id") @db.Uuid
+  user           User?    @relation(fields: [userId], references: [id])
 
   createdAt      DateTime @default(now()) @map("created_at")
 

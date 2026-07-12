@@ -2,20 +2,18 @@ const express = require("express");
 const router = express.Router();
 
 const prisma = require("../prismaClient");
-const supabaseAdmin = require("../supabaseAdmin");
 const { requireAuth } = require("../middleware/auth");
 
 router.use(requireAuth);
 
 // DELETE the logged-in owner's account entirely:
 // 1. delete all their reviews (so we don't leave orphaned data)
-// 2. delete their Supabase Auth login itself
+// 2. delete their User row itself
 router.delete("/", async (req, res) => {
   try {
     await prisma.review.deleteMany({ where: { userId: req.userId } });
 
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(req.userId);
-    if (error) throw error;
+    await prisma.user.delete({ where: { id: req.userId } });
 
     res.status(200).json({ message: "Account deleted successfully." });
   } catch (err) {
