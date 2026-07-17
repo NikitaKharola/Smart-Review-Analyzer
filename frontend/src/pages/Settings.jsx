@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import { isLoggedIn } from "../api";
+import {
+  isLoggedIn,
+  getCurrentUser,
+  updateProfile,
+  updatePassword,
+  deleteAccount,
+} from "../api";
 
 function Settings() {
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -30,9 +35,9 @@ function Settings() {
         navigate("/login");
         return;
       }
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      setFullName(data.user?.user_metadata?.full_name || "");
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      setFullName(currentUser?.fullName || "");
       setCheckingAuth(false);
     });
   }, [navigate]);
@@ -51,10 +56,7 @@ function Settings() {
     setProfileError("");
     setProfileSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: fullName },
-      });
-      if (error) throw error;
+      await updateProfile({ fullName });
       setProfileMessage("Profile updated.");
     } catch (err) {
       setProfileError(err.message || "Could not update profile.");
@@ -79,8 +81,7 @@ function Settings() {
 
     setPasswordSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await updatePassword({ newPassword });
       setPasswordMessage("Password updated successfully.");
       setNewPassword("");
       setConfirmPassword("");
@@ -101,23 +102,8 @@ function Settings() {
 
     setDeleting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-
-      const res = await fetch("http://localhost:5000/api/account", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.message || "Could not delete account.");
-      }
-
-      await supabase.auth.signOut();
+      await deleteAccount();
+      localStorage.removeItem("token");
       navigate("/");
     } catch (err) {
       setDeleteError(err.message || "Could not delete account.");
