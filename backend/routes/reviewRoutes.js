@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const prisma = require("../prismaClient");
-const { analyzeText, extractRatingFromText } = require("../utils/analyzer");
+const { extractRatingFromText } = require("../utils/analyzer");
+const { analyzeTextAI } = require("../utils/aiAnalyzer");
 const { requireAuth } = require("../middleware/auth");
 const { buildReportData } = require("../utils/report");
 const { generateReportPdf } = require("../utils/generatePdf");
@@ -65,15 +66,21 @@ router.get("/stats", async (req, res) => {
 });
 
 // POST analyze arbitrary text — preview only, does not save
-router.post("/analyze", (req, res) => {
+router.post("/analyze", async (req, res) => {
   const { text } = req.body;
 
   if (!text || !text.trim()) {
     return res.status(400).json({ message: "Please provide review text to analyze." });
   }
 
-  const result = analyzeText(text);
-  res.status(200).json(result);
+  try {
+    const result = await analyzeTextAI(text);
+    res.status(200).json(result);
+  } catch (err) {
+    // analyzeTextAI already falls back internally on AI failure, so
+    // reaching here means something unexpected happened.
+    res.status(500).json({ message: "Could not analyze this text. Please try again." });
+  }
 });
 
 // SEARCH within the logged-in owner's reviews only
@@ -120,7 +127,7 @@ router.post("/bulk", async (req, res) => {
       const trimmed = (text || "").trim();
       if (!trimmed) continue;
 
-      const analysis = analyzeText(trimmed);
+      const analysis = await analyzeTextAI(trimmed);
       const { rating: extractedRating, cleanText } = extractRatingFromText(trimmed);
       // Prefer a real rating found in the text itself; only guess from
       // sentiment as a last resort when no rating was written at all.
@@ -197,7 +204,7 @@ router.post("/", async (req, res) => {
     });
   }
 
-  const analysis = analyzeText(review);
+  const analysis = await analyzeTextAI(review);
 
   try {
     const saved = await prisma.review.create({
@@ -226,7 +233,7 @@ router.put("/:id", async (req, res) => {
   if (rating) data.rating = rating;
 
   if (reviewText) {
-    const analysis = analyzeText(reviewText);
+    const analysis = await analyzeTextAI(reviewText);
     data.reviewText = reviewText;
     data.sentiment = analysis.sentiment;
     data.theme = analysis.theme;

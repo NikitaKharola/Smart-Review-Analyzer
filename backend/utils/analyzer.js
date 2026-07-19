@@ -225,4 +225,4 @@ function analyzeAll(reviews) {
   };
 }
 
-module.exports = { analyzeText, analyzeAll, extractRatingFromText };
+module.exports = { analyzeText, analyzeAll, extractRatingFromText, THEMES };
